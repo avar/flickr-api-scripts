@@ -1,0 +1,21 @@
+#!/usr/bin/env perl
+use feature ':5.10';
+use strict;
+use Flickr::API;
+use Data::Dump 'dump';
+
+my $api = Flickr::API->new({key => qx[cat ~/.flickr_api_key]});
+
+my $r_set = $api->execute_method("flickr.photosets.getPhotos", { photoset_id => $ARGV[0] });
+
+for my $ref (@{$r_set->{tree}->{children}->[1]->{children}}) {
+    next unless exists $ref->{attributes};
+
+    my $i_res = $api->execute_method("flickr.photos.getSizes", { photo_id => $ref->{attributes}->{id} });
+
+    for my $entry (@{ $i_res->{tree}->{children}->[1]->{children} }) {
+        next unless exists $entry->{attributes};
+
+        say $entry->{attributes}->{source} if $entry->{attributes}->{label} eq 'Original';
+    }
+};
