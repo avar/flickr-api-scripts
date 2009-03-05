@@ -13,9 +13,20 @@ for my $ref (@{$r_set->{tree}->{children}->[1]->{children}}) {
 
     my $i_res = $api->execute_method("flickr.photos.getSizes", { photo_id => $ref->{attributes}->{id} });
 
+    my %img;
     for my $entry (@{ $i_res->{tree}->{children}->[1]->{children} }) {
         next unless exists $entry->{attributes};
 
-        say $entry->{attributes}->{source} if $entry->{attributes}->{label} eq 'Original';
+        my $label = $entry->{attributes}->{label};
+        my $source = $entry->{attributes}->{source};
+        $img{$label} = $source;
+    }
+
+    if (exists $img{Original}) {
+        say $img{Original};
+    } elsif (exists $img{Large}) {
+        say $img{Large};
+    } else {
+        say "Couldn't find Original or Large size, only " . join("|", keys %img);
     }
 };
