@@ -6,10 +6,12 @@ use Data::Dump 'dump';
 
 my $api = Flickr::API->new({key => qx[cat ~/.flickr_api_key]});
 
-my $r_set = $api->execute_method("flickr.photosets.getPhotos", { photoset_id => $ARGV[0] });
+my @r_set = getPhotos($ARGV[0]);
 
-for my $ref (@{$r_set->{tree}->{children}->[1]->{children}}) {
+for my $ref (map { @{$_->{tree}->{children}->[1]->{children}} } @r_set) {
     next unless exists $ref->{attributes};
+    say $ref->{attributes}{title};
+    next;
 
     my $i_res = $api->execute_method("flickr.photos.getSizes", { photo_id => $ref->{attributes}->{id} });
 
@@ -30,3 +32,22 @@ for my $ref (@{$r_set->{tree}->{children}->[1]->{children}}) {
         say "Couldn't find Original or Large size, only " . join("|", keys %img);
     }
 };
+
+# Flickr only does 500 photos per page, get all pages
+sub getPhotos
+{
+    my $set = shift;
+    my @res;
+    my $page = 1;
+
+    while (1) {
+        my $r_set = $api->execute_method("flickr.photosets.getPhotos", { photoset_id => $set, page => $page });
+        push @res => $r_set;
+
+        my $photos = scalar grep { exists $_->{attributes} } @{ $r_set->{tree}->{children}->[1]->{children} };
+        last unless $photos == 500;
+        $page++;
+    }
+
+    @res;
+}
