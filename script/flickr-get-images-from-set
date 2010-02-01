@@ -10,8 +10,8 @@ my @r_set = getPhotos($ARGV[0]);
 
 for my $ref (map { @{$_->{tree}->{children}->[1]->{children}} } @r_set) {
     next unless exists $ref->{attributes};
-    say $ref->{attributes}{title};
-    next;
+    #say $ref->{attributes}{title};
+    #next;
 
     my $i_res = $api->execute_method("flickr.photos.getSizes", { photo_id => $ref->{attributes}->{id} });
 
